@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-900 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo Interactivo de Motos</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-nav {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+        }
+        .glass-modal {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Estilos del Botón de WhatsApp */
+        .btn-whatsapp {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background-color: #25D366;
+            color: #ffffff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            box-shadow: 0 4px 14px rgba(37, 211, 102, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .btn-whatsapp:hover {
+            background-color: #1DA851;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(37, 211, 102, 0.45);
+        }
+
+        .btn-whatsapp i {
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans antialiased bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-white">
+
+    <!-- Header / Navbar -->
+    <header class="sticky top-0 z-40 glass-nav border-b border-slate-800/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-gradient-to-tr from-grey-500 to-grey-600 rounded-xl shadow-lg shadow-grey-500/20 text-white">
+                    <div class="logo">
+                        <img src="logo bel.png" alt="Bel Motos Logo" width="160">
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                        Catálogo de Bel Motos
+                    </h1>
+                    <p class="text-xs text-slate-400 font-medium">Precios Finales y Fichas Técnicas</p>
+                </div>
+            </div>
+
+            <!-- Stats Badge Quick View -->
+            <div class="hidden md:flex items-center space-x-6 text-sm border-l border-slate-800 pl-6">
+                <div class="flex items-center space-x-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+                    <span class="text-slate-400">Modelos:</span>
+                    <span id="total-models-count" class="font-bold text-white">0</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                    <span class="text-slate-400">Precio Promedio:</span>
+                    <span id="avg-price-val" class="font-bold text-white">$0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Filter & Search Controls Bar -->
+        <div class="glass-card rounded-2xl p-4 sm:p-6 space-y-4">
+            <div class="flex flex-col lg:flex-row gap-4 justify-between items-stretch lg:items-center">
+                <!-- Search Input -->
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <i data-lucide="search" class="w-5 h-5"></i>
+                    </div>
+                    <input type="text" id="search-input" 
+                        placeholder="Buscar por modelo de vehículo..." 
+                        class="w-full pl-10 pr-10 py-3 bg-slate-900/90 border border-slate-700/80 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all">
+                    <button id="clear-search" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <!-- Sort options -->
+                <div class="flex flex-wrap sm:flex-nowrap items-center gap-3">
+                    <div class="relative w-full sm:w-auto">
+                        <select id="sort-select" class="w-full appearance-none bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-3 pr-10 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 cursor-pointer">
+                            <option value="default">Orden Por Defecto</option>
+                            <option value="price-asc">Precio: Menor a Mayor</option>
+                            <option value="price-desc">Precio: Mayor a Menor</option>
+                            <option value="name-asc">Modelo: A - Z</option>
+                            <option value="name-desc">Modelo: Z - A</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                            <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+
+                    <!-- View Switcher Toggle Buttons -->
+                    <div class="flex bg-slate-900/90 p-1 rounded-xl border border-slate-700/80 w-full sm:w-auto justify-center">
+                        <button id="view-grid-btn" title="Vista Tarjetas" class="flex-1 sm:flex-none p-2 rounded-lg text-cyan-400 bg-slate-800 transition-all">
+                            <i data-lucide="grid" class="w-5 h-5"></i>
+                        </button>
+                        <button id="view-table-btn" title="Vista Tabla" class="flex-1 sm:flex-none p-2 rounded-lg text-slate-400 hover:text-white transition-all">
+                            <i data-lucide="list" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Pills -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-2 pt-1 no-scrollbar" id="category-pills">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
+        <!-- Results Counter & Criteria Note -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center text-sm text-slate-400 gap-2 px-1">
+            <div>
+                Mostrando <span id="showing-count" class="font-semibold text-cyan-400">0</span> de <span id="total-count">0</span> resultados
+            </div>
+            <div class="flex items-center gap-2 text-xs bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-800">
+                <i data-lucide="info" class="w-3.5 h-3.5 text-cyan-400"></i>
+                <span>Haz clic sobre cualquier tarjeta para ver su <strong>Ficha Técnica Completa</strong>.</span>
+            </div>
+        </div>
+
+        <!-- Grid View Container -->
+        <div id="grid-view" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Cards populated by JS -->
+        </div>
+
+        <!-- Table View Container -->
+        <div id="table-view" class="hidden glass-card rounded-2xl overflow-hidden border border-slate-800">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-slate-900/80 border-b border-slate-800 text-slate-400 uppercase text-xs tracking-wider">
+                            <th class="py-4 px-6 font-semibold">Imagen</th>
+                            <th class="py-4 px-6 font-semibold">Categoría</th>
+                            <th class="py-4 px-6 font-semibold">Modelo</th>
+                            <th class="py-4 px-6 font-semibold text-right">Precio Final Aplicado</th>
+                            <th class="py-4 px-6 font-semibold text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="divide-y divide-slate-800/60 text-slate-300">
+                        <!-- Table rows populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden glass-card rounded-2xl p-12 text-center space-y-4 max-w-md mx-auto my-12">
+            <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-400">
+                <i data-lucide="search-x" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white">No se encontraron resultados</h3>
+            <p class="text-slate-400 text-sm">No encontramos vehículos que coincidan con tus criterios de búsqueda o filtro.</p>
+            <button id="reset-filters-btn" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-sm rounded-xl transition-all shadow-lg shadow-cyan-600/20">
+                Restablecer Filtros
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Modal / Ventana Emergente de Ficha Técnica -->
+    <div id="spec-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 hidden">
+        <!-- Backdrop Overlay -->
+        <div id="modal-backdrop" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity"></div>
+
+        <!-- Modal Box Container -->
+        <div class="relative w-full max-w-3xl max-h-[90vh] glass-modal rounded-3xl overflow-hidden shadow-2xl flex flex-col z-10 animate-fade-in border border-slate-700/60">
+            <!-- Header Modal -->
+            <div class="p-5 sm:p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
+                <div class="flex items-center space-x-3">
+                    <span id="modal-category-badge" class="px-3 py-1 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 flex items-center gap-1.5">
+                        <i data-lucide="tag" class="w-3.5 h-3.5"></i>
+                        <span id="modal-category-text">Categoría</span>
+                    </span>
+                    <span class="text-xs text-slate-400">Ficha Técnica Oficial</span>
+                </div>
+                <button id="close-modal-btn" class="p-2 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 rounded-full transition-all">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Content Modal (Scrollable) -->
+            <div class="p-6 overflow-y-auto space-y-6 flex-1">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <!-- High Quality Image Container -->
+                    <div class="relative w-full h-64 bg-slate-900/90 rounded-2xl overflow-hidden flex items-center justify-center p-4 border border-slate-800 group">
+                        <img id="modal-img" src="" alt="" class="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105">
+                    </div>
+
+                    <!-- Main Info & Pricing Breakdown -->
+                    <div class="space-y-4">
+                        <div>
+                            <h2 id="modal-title" class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Modelo</h2>
+                            <p class="text-slate-400 text-xs mt-1">Código Identificador: #<span id="modal-id">00</span></p>
+                        </div>
+
+                        <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+                            <div class="text-xs text-slate-400">Precio Final de Oferta</div>
+                            <div class="flex items-baseline space-x-2">
+                                <span id="modal-price" class="text-3xl font-black text-cyan-400 tracking-tight">$0.00</span>
+                                <span id="modal-price-source" class="text-xs px-2.5 py-0.5 rounded border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 font-medium">
+                                    Precio Venta
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Botón interactivo de WhatsApp conectado al 04142800071 -->
+                        <a id="modal-whatsapp-btn" href="https://wa.me/584142800071?text=Hola,%20quisiera%20consultar%20información" target="_blank" class="btn-whatsapp w-full">
+                            <i class="fab fa-whatsapp"></i>
+                            <span>Contactar por WhatsApp</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Technical Specs Grid -->
+                <div class="space-y-3 pt-2">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                        <i data-lucide="sliders" class="w-4 h-4 text-cyan-400"></i>
+                        Especificaciones Mecánicas y Generales
+                    </h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="modal-specs-container">
+                        <!-- Spec boxes populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Equipment Badges (If Available) -->
+                <div id="modal-equipment-section" class="space-y-2 pt-2 hidden">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+                        Equipamiento Destacado
+                    </h3>
+                    <div class="flex flex-wrap gap-2" id="modal-equipment-container">
+                        <!-- Equipment tags injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-slate-800/80 py-6 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4">
+            Catálogo Interactivo de Motos &bull; Precios y Fichas Técnicas Actualizadas
+        </div>
+    </footer>
+
+    <!-- JavaScript Data & Logic -->
+    <script>
+        const vehiclesData = [
+            { 
+                id: 1, 
+                category: "Motos Bel", 
+                model: "KEIKO 150", 
+                year: "2025",
+                salePrice: 1340.00, 
+                clientPrice: 1217.00, 
+                image: "keiko 150.png", 
+                engine: "150 CC Monocilíndrico 4T (Aire)", 
+                power: "9 HP @ 7500 RPM",
+                torque: "9.6 Nm @ 5000 RPM",
+                ignition: "CDI / Pedal",
+                fuelSystem: "Carburador",
+                consumption: "≤ 3 L / 100 km",
+                oilCapacity: "1 L (20W-50 4T)",
+                brake: "Disco Del. / Tambor Tras.", 
+                frontSuspension: "Bastones telescópicos",
+                rearSuspension: "Amortiguadores Doble Espiral",
+                frontTire: "2.75-18",
+                rearTire: "3.00-18",
+                tank: "10 Litros", 
+                transmission: "Sincrónica 5 Vel.", 
+                dimensions: "1970 x 815 x 1110 mm",
+                weight: "110 kg (Tara) / 150 kg (Carga)",
+                equipment: ["Tablero Electrónico", "Cargador USB", "Herramientas de Fábrica"],
+                usage: "Urbano / Trabajo / Diario" 
+            },
+            { 
+                id: 2, 
+                category: "Motos Bel", 
+                model: "NATSU 150", 
+                year: "2025",
+                salePrice: 1540.00, 
+                clientPrice: 1361.00, 
+                image: "natsu 150.png", 
+                engine: "150 CC Monocilíndrico 4T (Aire)", 
+                power: "9 HP @ 7500 RPM",
+                torque: "9.6 Nm @ 5000 RPM",
+                ignition: "CDI / Pedal",
+                fuelSystem: "Carburador",
+                consumption: "≤ 3 L / 100 km",
+                oilCapacity: "1 L (20W-50 4T)",
+                brake: "Disco Del. / Tambor Tras.", 
+                frontSuspension: "Bastones telescópicos",
+                rearSuspension: "Amortiguadores y espirales",
+                frontTire: "2.75-18",
+                rearTire: "110/90-16",
+                tank: "9 Litros", 
+                transmission: "Sincrónica 5 Vel.", 
+                dimensions: "1910 x 740 x 1050 mm",
+                weight: "110 kg (Tara) / 150 kg (Carga)",
+                equipment: ["Tablero Analógico", "Cargador USB", "Faro Delantero + Cruces", "Herramientas"],
+                usage: "Urbano Diario" 
+            },
+            { 
+                id: 3, 
+                category: "Motos Bel", 
+                model: "TT 150", 
+                year: "2025",
+                salePrice: 1900.00, 
+                clientPrice: 1704.00, 
+                image: "tt 150.png", 
+                engine: "150 CC Zongshen® Monocilíndrico 4T", 
+                power: "11 HP @ 8000 RPM",
+                torque: "10 Nm @ 7500 RPM",
+                ignition: "CDI / Pedal",
+                fuelSystem: "Carburador",
+                consumption: "≤ 3 L / 100 km",
+                oilCapacity: "1 L (20W-50 4T)",
+                brake: "Disco Del. / Tambor Tras.", 
+                frontSuspension: "Horquillas telescópicas",
+                rearSuspension: "Monoshock ajustable",
+                frontTire: "90/90-19",
+                rearTire: "110/90-17",
+                tank: "12 Litros", 
+                transmission: "Sincrónica 5 Vel.", 
+                dimensions: "1970 x 870 x 1210 mm",
+                weight: "130 kg (Tara) / 150 kg (Carga)",
+                equipment: ["Tablero Electrónico", "Cargador USB", "Luces Halógenas"],
+                usage: "Todo Terreno / Enduro / Mixto" 
+            },
+            { 
+                id: 4,
+                category: "Motos Bel", 
+                model: "saki 150", 
+                year: "2025",
+                salePrice: 1700.00, 
+                clientPrice: 1542.00, 
+                image: "saki 150.png", 
+                engine: "Monocilíndrico 4T (Enfriado por aire)", 
+                power: "9,25 HP / 7500 RPM",
+                torque: "9 Nm / 6000 RPM",
+                ignition: "CDI / Pedal",
+                fuelSystem: "Carburador",
+                consumption: "≤ 1 L / 100 km",
+                oilCapacity: "1 L (20W-50 4T)",
+                brake: "CBS con freno de mano", 
+                frontSuspension: "Horquilla telescópica delantera",
+                rearSuspension: "amortiguador",
+                frontTire: "80/90-14",
+                rearTire: "90/90-14",
+                tank: "5 Litros", 
+                transmission: "Automatica", 
+                dimensions: "1600 x 650 x 1950 mm",
+                weight: "101 kg (Tara) / 150 kg (Carga)",
+                equipment: ["Parrilla", "Cargador USB", "Luces LED"],
+                usage: "paseo"
+            },
+            { id: 5, category: "Motos Bel", model: "RANGER 250", salePrice: 3180.00, clientPrice: 2813.00, image: "ranger 250.png", engine: "250 cc 4T Refr. Líquida", brake: "Doble Disco CBS", tank: "16 Litros", transmission: "Manual 6 Vel.", usage: "Ruta / Adventure" },
+            { id: 6, category: "Motos Bel", model: "RANGER 300", salePrice: 3350.00, clientPrice: 2981.00, image: "ranger 300.png", engine: "300 cc Inyección Eléctrica", brake: "Doble Disco ABS", tank: "17 Litros", transmission: "Manual 6 Vel.", usage: "Turismo / Alta Cilindrada" },
+            { id: 7, category: "Motos Bel", model: "VENECIA 150", salePrice: 1380.00, clientPrice: 1200.00, image: "venecia 150.png", engine: "150 cc Scooter 4T", brake: "Disco Delantero", tank: "6 Litros", transmission: "Automática CVT", usage: "Scooter / Urbano Chic" },
+            { id: 8, category: "Motos Bel", model: "CUP 110", salePrice: 1970.00, clientPrice: 1744.00, image: "cup 110.png", engine: "110 cc Semiautomático", brake: "Tambor / Tambor", tank: "4 Litros", transmission: "Semiautomática 4 Vel.", usage: "Económico / Trabajo" },
+            { id: 9, category: "Bel by UM", model: "MAX 150", salePrice: 1560.00, clientPrice: 1396.00, image: "max 150.png", engine: "150 cc UM Engine", brake: "Disco / Tambor", tank: "12 Litros", transmission: "Manual 5 Vel.", usage: "Deportivo Urbano" },
+            { id: 10, category: "Bel by UM", model: "NITROX SPORT 200", salePrice: 1680.00, clientPrice: 1489.00, image: "nitrox sport 200.png", engine: "200 cc Alto Rendimiento", brake: "Disco Delantero/Trasero", tank: "14 Litros", transmission: "Manual 5 Vel.", usage: "Sport / Naked" },
+            { id: 11, category: "Bel by UM", model: "POWER MAX 150", salePrice: 2050.00, clientPrice: 1798.00, image: "power max 150.png", engine: "150 cc Maxi-Scooter", brake: "Disco Delantero", tank: "8 Litros", transmission: "Automática CVT", usage: "Confort / Ciudad" },
+            { id: 12, category: "Bel by UM", model: "FASTWIND 200", salePrice: 2230.00, clientPrice: 1973.00, image: "fastwind 200.png", engine: "200 cc Balanceado", brake: "Doble Disco", tank: "13 Litros", transmission: "Manual 5 Vel.", usage: "Calle / Sport" },
+            { id: 13, category: "Bel by UM", model: "DSR 200", salePrice: 2240.00, clientPrice: 1953.00, image: "dsr 200.png", engine: "200 cc Enduro", brake: "Disco Hidráulico", tank: "11 Litros", transmission: "Manual 5 Vel.", usage: "Dual Sport / Off-Road" },
+            { id: 14, category: "Bel by UM", model: "BELLAGIO 150", salePrice: 1890.00, clientPrice: 1689.00, image: "bellagio 150.png", engine: "150 cc Retro Style", brake: "Disco Delantero", tank: "6.5 Litros", transmission: "Automática CVT", usage: "Vintage Scooter" },
+            { id: 15, category: "Bel by UM", model: "DSR RALLY PRO 250", salePrice: 4800.00, clientPrice: 4288.00, image: "dsr rally pro 250.png", engine: "250 cc DOHC 4 Válvulas", brake: "Doble Disco Lobo", tank: "15 Litros", transmission: "Manual 6 Vel.", usage: "Rally / Enduro Pro" },
+            { id: 16, category: "Bel by UM", model: "ZOOM 150", salePrice: 1850.00, clientPrice: 1623.00, image: "zoom 150.png", engine: "150 cc Agil", brake: "Disco Delantero", tank: "5.5 Litros", transmission: "Automática CVT", usage: "Urbano Compacto" },
+            { id: 17, category: "Bel by UM", model: "RENEGADE SPORT 200", salePrice: 3390.00, clientPrice: 2922.00, image: "renegade sport 200.png", engine: "200 cc Chopper/Custom", brake: "Disco / Tambor", tank: "15 Litros", transmission: "Manual 5 Vel.", usage: "Cruiser / Custom" },
+            { id: 18, category: "Bel by UM", model: "RENEGADE COMMANDO 250T", salePrice: 3900.00, clientPrice: 3389.00, image: "renegade commando 250t.png", engine: "250 cc Bi-Cilíndrico", brake: "Doble Disco CBS", tank: "18 Litros", transmission: "Manual 6 Vel.", usage: "Cruiser Touring" },
+            { id: 19, category: "Bel by UM", model: "DSR HYPER SPORT 250", salePrice: 3730.00, clientPrice: 3252.00, image: "dsr hyper sport 250.png", engine: "250 cc Enfriado por Aceite", brake: "Disco ABS", tank: "14 Litros", transmission: "Manual 6 Vel.", usage: "Supermoto / Sport" },
+            { id: 20, category: "Trimotos", model: "KAMELLO 4X4 350", salePrice: null, clientPrice: 7647.00, image: "kamello 4x4 350.png", engine: "350 cc Tracción 4x4", brake: "Disco Mecánico", tank: "16 Litros", transmission: "Manual con Cardán + Reversa", usage: "Carga Pesada / Agrícola" },
+            { id: 21, category: "Trimotos", model: "LA GANADERA 4X4 300", salePrice: null, clientPrice: 6979.00, image: "la ganadera 4x4 300.png", engine: "300 cc Chasis Reforzado", brake: "Tambor Hidráulico", tank: "14 Litros", transmission: "Manual + Modos de Carga", usage: "Ganadería / Campo" },
+            { id: 22, category: "Trimotos", model: "CHOPPER 250", salePrice: null, clientPrice: 4891.00, image: "chopper 250.png", engine: "250 cc Reforzado", brake: "Disco Delantero", tank: "13 Litros", transmission: "Manual 5 Vel + Reversa", usage: "Reparto / Trabajo" },
+            { id: 23, category: "Trimotos", model: "MOTO-TANQUE 300", salePrice: null, clientPrice: 7819.00, image: "moto-tanque 300.png", engine: "300 cc Tanque Integrado", brake: "Disco Traspuntal", tank: "14 Litros (Motor)", transmission: "Manual + Reductora", usage: "Transporte de Líquidos" },
+            { id: 24, category: "Trimotos", model: "AZUMI CAVA 250", salePrice: null, clientPrice: 5242.00, image: "azumi cava 250.png", engine: "250 cc Cava Cerrada", brake: "Tambor Doble", tank: "12 Litros", transmission: "Manual 5 Vel + Reversa", usage: "Carga Refrigerada / Alimentos" },
+            { id: 25, category: "Trimotos", model: "AZUMI 200", salePrice: null, clientPrice: 3664.00, image: "azumi 200.png", engine: "200 cc Económico", brake: "Tambor", tank: "11 Litros", transmission: "Manual 5 Vel + Reversa", usage: "Carga Ligera" },
+            { 
+                id: 26, 
+                category: "Trimotos", 
+                model: "LA MULA 200", 
+                year: "2025",
+                salePrice: null, 
+                clientPrice: 3391.00, 
+                image: "la mula 200.png", 
+                engine: "200 CC Zongshen® Monocilíndrico 4T (Agua)", 
+                power: "10.5 HP @ 7500 RPM",
+                torque: "14 Nm @ 6000 RPM",
+                ignition: "CDI / Pedal",
+                fuelSystem: "Carburador (Compresión 9.2:1)",
+                consumption: "Económico de Carga",
+                oilCapacity: "1.5 L (20W-50 4T)",
+                brake: "Tambor Del. / Tambor Tras.", 
+                frontSuspension: "Bastones telescópicos",
+                rearSuspension: "Resortes helicoidales 5+2 / Amortiguadores",
+                frontTire: "5.0-12",
+                rearTire: "5.0-12",
+                tank: "12 Litros", 
+                transmission: "Sincrónica 5 Vel.", 
+                dimensions: "Caja: 1.8 x 1.2 m (Chasis 50x100)",
+                weight: "Carga Útil: 800 Kg (Eje Changan 180)",
+                equipment: ["Caucho de Repuesto", "Juego de Herramientas", "Batería 12V 9A", "Chasis Reforzado"],
+                usage: "Trabajo Duro / Reparto / Carga" 
+            },
+            { id: 27, category: "Trimotos", model: "LA ECO-MOTO 200", salePrice: null, clientPrice: 6067.00, image: "la eco-moto 200.png", engine: "200 cc Bajo Consumo", brake: "Tambor", tank: "12 Litros", transmission: "Manual 5 Vel.", usage: "Ecologíca / Reciclaje" },
+            { id: 28, category: "Trimotos", model: "LA GANADERA 250", salePrice: null, clientPrice: 7335.00, image: "la ganadera 250.png", engine: "250 cc Doble Transmisión", brake: "Tambor Hidráulico", tank: "14 Litros", transmission: "Manual + Reversa", usage: "Campo / Carga Animal" },
+            { id: 29, category: "Trimotos", model: "LA VOLQUETA 300", salePrice: null, clientPrice: 6696.00, image: "la volqueta 300.png", engine: "300 cc Con Volquete Hidráulico", brake: "Disco Doble", tank: "15 Litros", transmission: "Manual + Reversa", usage: "Construcción / Escombros" },
+            { id: 30, category: "Trimotos", model: "MOTO SHOPPING 200", salePrice: null, clientPrice: 4989.00, image: "moto shopping 200.png", engine: "200 cc Furgón Panorámico", brake: "Tambor", tank: "10 Litros", transmission: "Manual 5 Vel.", usage: "Venta Ambulante / Tienda Móvil" },
+            { id: 31, category: "Trimotos", model: "LA AMBULANCIA 250", salePrice: null, clientPrice: 7676.00, image: "la ambulancia 250.png", engine: "250 cc Módulo Médico", brake: "Doble Disco", tank: "14 Litros", transmission: "Manual 5 Vel.", usage: "Emergencias / Primeros Auxilios" },
+            { id: 32, category: "ATV", model: "JIMMY 50 2T", salePrice: 700.00, clientPrice: 699.00, image: "jimmy 50 2t.png", engine: "50 cc 2 Tiempos Infantil", brake: "Disco Trasero", tank: "2.5 Litros", transmission: "Automática Directa", usage: "Infantil / Recreación" },
+            { id: 33, category: "ATV", model: "JIMMY 125", salePrice: 1500.00, clientPrice: 1377.00, image: "jimmy 125.png", engine: "125 cc 4T Automático", brake: "Disco Hidráulico", tank: "5 Litros", transmission: "Automática F-N-R", usage: "Juvenil / Utilitario" },
+            { id: 34, category: "ATV", model: "JIMMY 200", salePrice: null, clientPrice: 2450.00, image: "jimmy 200.png", engine: "200 cc Enfriado por Aire", brake: "Doble Disco Del/Tras", tank: "7 Litros", transmission: "Automática CVT + Reversa", usage: "Cuatrimoto Off-Road" },
+            { id: 35, category: "ATV", model: "JIMMY 200 XL", salePrice: null, clientPrice: 2850.00, image: "jimmy 200 xl.png", engine: "200 cc Chasis Extendido", brake: "Doble Disco", tank: "8.5 Litros", transmission: "Automática CVT + Reversa", usage: "Aventura / Trabajo Todo Terreno" },
+            { id: 36, category: "ATV", model: "LANDFORCE 650", salePrice: null, clientPrice: 11651.00, image: "landforce 650.png", engine: "650 cc Inyección 4x4", brake: "Doble Disco Hidráulico", tank: "19 Litros", transmission: "Automática L-H-N-R-P", usage: "4x4 Profesional / Excursión" },
+            { id: 37, category: "ATV", model: "LANDFORCE 550", salePrice: null, clientPrice: 8326.00, image: "landforce 550.png", engine: "550 cc Monocilíndrico 4x4", brake: "Disco Integral", tank: "16 Litros", transmission: "Automática L-H-N-R", usage: "4x4 Utilitario" },
+            { id: 38, category: "ATV", model: "LANDFORCE 1000", salePrice: null, clientPrice: 14369.00, image: "landforce 1000.png", engine: "1000 cc V-Twin 4x4 EPS", brake: "Discos Ventilados 4 Ruedas", tank: "22 Litros", transmission: "Automática CVT L-H-N-R-P", usage: "Extreme ATV / Máxima Potencia" }
+        ];
+
+        const processedData = vehiclesData.map(item => {
+            const hasSalePrice = item.salePrice !== null && item.salePrice !== undefined;
+            return {
+                ...item,
+                finalPrice: hasSalePrice ? item.salePrice : item.clientPrice,
+                priceSource: hasSalePrice ? 'Precio Venta' : 'Precio Cliente Final',
+                sourceType: hasSalePrice ? 'sale' : 'client'
+            };
+        });
+
+        let currentCategory = 'ALL';
+        let searchQuery = '';
+        let currentSort = 'default';
+        let currentView = 'grid';
+        const whatsappNumber = '584142800071';
+
+        const formatCurrency = (val) => {
+            if (val === null || val === undefined) return '-';
+            return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(val).replace('USD', '$');
+        };
+
+        const categoryIcons = {
+            'Motos Bel': 'bike',
+            'Bel by UM': 'zap',
+            'Trimotos': 'truck',
+            'ATV': 'compass'
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCategoryPills();
+            updateStats();
+            renderContent();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            const searchInput = document.getElementById('search-input');
+            const clearSearchBtn = document.getElementById('clear-search');
+            
+            searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value.toLowerCase().trim();
+                clearSearchBtn.classList.toggle('hidden', searchQuery === '');
+                renderContent();
+            });
+
+            clearSearchBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                searchQuery = '';
+                clearSearchBtn.classList.add('hidden');
+                renderContent();
+            });
+
+            document.getElementById('sort-select').addEventListener('change', (e) => {
+                currentSort = e.target.value;
+                renderContent();
+            });
+
+            document.getElementById('view-grid-btn').addEventListener('click', () => setView('grid'));
+            document.getElementById('view-table-btn').addEventListener('click', () => setView('table'));
+
+            document.getElementById('reset-filters-btn').addEventListener('click', () => {
+                currentCategory = 'ALL';
+                searchQuery = '';
+                currentSort = 'default';
+                document.getElementById('search-input').value = '';
+                document.getElementById('sort-select').value = 'default';
+                document.getElementById('clear-search').classList.add('hidden');
+                renderCategoryPills();
+                renderContent();
+            });
+
+            document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+            document.getElementById('modal-backdrop').addEventListener('click', closeModal);
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeModal();
+            });
+        }
+
+        function setView(view) {
+            currentView = view;
+            const gridContainer = document.getElementById('grid-view');
+            const tableContainer = document.getElementById('table-view');
+            const gridBtn = document.getElementById('view-grid-btn');
+            const tableBtn = document.getElementById('view-table-btn');
+
+            if (view === 'grid') {
+                gridContainer.classList.remove('hidden');
+                tableContainer.classList.add('hidden');
+                gridBtn.className = 'flex-1 sm:flex-none p-2 rounded-lg text-cyan-400 bg-slate-800 transition-all';
+                tableBtn.className = 'flex-1 sm:flex-none p-2 rounded-lg text-slate-400 hover:text-white transition-all';
+            } else {
+                gridContainer.classList.add('hidden');
+                tableContainer.classList.remove('hidden');
+                tableBtn.className = 'flex-1 sm:flex-none p-2 rounded-lg text-cyan-400 bg-slate-800 transition-all';
+                gridBtn.className = 'flex-1 sm:flex-none p-2 rounded-lg text-slate-400 hover:text-white transition-all';
+            }
+        }
+
+        function renderCategoryPills() {
+            const categories = ['ALL', ...new Set(processedData.map(item => item.category))];
+            const container = document.getElementById('category-pills');
+            
+            container.innerHTML = categories.map(cat => {
+                const isActive = currentCategory === cat;
+                const label = cat === 'ALL' ? 'Todos' : cat;
+                const icon = categoryIcons[cat] || 'layers';
+                
+                return `
+                    <button 
+                        onclick="selectCategory('${cat}')"
+                        class="flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                            isActive 
+                            ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/25 ring-2 ring-cyan-400/50' 
+                            : 'bg-slate-900/80 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-800'
+                        }">
+                        ${cat !== 'ALL' ? `<i data-lucide="${icon}" class="w-3.5 h-3.5"></i>` : ''}
+                        <span>${label}</span>
+                    </button>
+                `;
+            }).join('');
+            
+            if (window.lucide) lucide.createIcons();
+        }
+
+        window.selectCategory = function(cat) {
+            currentCategory = cat;
+            renderCategoryPills();
+            renderContent();
+        };
+
+        function getFilteredAndSortedData() {
+            let result = processedData.filter(item => {
+                const matchesCategory = currentCategory === 'ALL' || item.category === currentCategory;
+                const matchesSearch = item.model.toLowerCase().includes(searchQuery) || 
+                                      item.category.toLowerCase().includes(searchQuery);
+                return matchesCategory && matchesSearch;
+            });
+
+            switch (currentSort) {
+                case 'price-asc':
+                    result.sort((a, b) => a.finalPrice - b.finalPrice);
+                    break;
+                case 'price-desc':
+                    result.sort((a, b) => b.finalPrice - a.finalPrice);
+                    break;
+                case 'name-asc':
+                    result.sort((a, b) => a.model.localeCompare(b.model));
+                    break;
+                case 'name-desc':
+                    result.sort((a, b) => b.model.localeCompare(a.model));
+                    break;
+                default:
+                    result.sort((a, b) => a.id - b.id);
+            }
+
+            return result;
+        }
+
+        function updateStats() {
+            const total = processedData.length;
+            const prices = processedData.map(d => d.finalPrice);
+            const avgPrice = prices.reduce((a, b) => a + b, 0) / total;
+
+            document.getElementById('total-models-count').textContent = total;
+            document.getElementById('avg-price-val').textContent = formatCurrency(avgPrice);
+        }
+
+        function renderContent() {
+            const filtered = getFilteredAndSortedData();
+            
+            document.getElementById('showing-count').textContent = filtered.length;
+            document.getElementById('total-count').textContent = processedData.length;
+
+            const gridContainer = document.getElementById('grid-view');
+            const tableBody = document.getElementById('table-body');
+            const emptyState = document.getElementById('empty-state');
+
+            if (filtered.length === 0) {
+                gridContainer.classList.add('hidden');
+                document.getElementById('table-view').classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            if (currentView === 'grid') {
+                gridContainer.classList.remove('hidden');
+            } else {
+                document.getElementById('table-view').classList.remove('hidden');
+            }
+
+            gridContainer.innerHTML = filtered.map(item => `
+                <div onclick="openModal(${item.id})" class="glass-card rounded-2xl p-5 flex flex-col justify-between hover:border-cyan-500/50 transition-all hover:-translate-y-1 group cursor-pointer">
+                    <div class="space-y-4">
+                        <div class="relative w-full h-48 bg-slate-900/80 rounded-xl overflow-hidden flex items-center justify-center p-2 border border-slate-800">
+                            <img src="${item.image}" alt="${item.model}" 
+                                 class="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/400x300/0f172a/94a3b8?text=${encodeURIComponent(item.model)}';">
+                            <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-950/80 text-cyan-400 p-2 rounded-lg backdrop-blur-md">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full bg-slate-800/80 text-cyan-400 border border-slate-700/50 flex items-center gap-1.5">
+                                <i data-lucide="${categoryIcons[item.category] || 'tag'}" class="w-3 h-3"></i>
+                                ${item.category}
+                            </span>
+                            
+                            <span class="text-[11px] font-medium px-2.5 py-1 rounded-md border flex items-center gap-1 ${
+                                item.sourceType === 'sale' 
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                                : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                            }">
+                                <i data-lucide="${item.sourceType === 'sale' ? 'check' : 'alert-circle'}" class="w-3 h-3"></i>
+                                ${item.priceSource}
+                            </span>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xl font-bold text-white group-hover:text-cyan-400 transition-colors">${item.model}</h3>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-4 border-t border-slate-800/80 flex justify-between items-center">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wider">Precio Final:</span>
+                            <span class="text-2xl font-extrabold text-white tracking-tight">${formatCurrency(item.finalPrice)}</span>
+                        </div>
+                        <button class="px-3 py-2 bg-slate-800 hover:bg-cyan-600 text-slate-200 hover:text-white rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border border-slate-700/60">
+                            <span>Ver Ficha</span>
+                            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            tableBody.innerHTML = filtered.map(item => `
+                <tr onclick="openModal(${item.id})" class="hover:bg-slate-800/40 transition-colors cursor-pointer">
+                    <td class="py-3 px-6">
+                        <div class="w-12 h-12 bg-slate-900 rounded-lg p-1 border border-slate-800 flex items-center justify-center">
+                            <img src="${item.image}" alt="${item.model}" class="max-h-full max-w-full object-contain"
+                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/100x100/0f172a/94a3b8?text=Moto';">
+                        </div>
+                    </td>
+                    <td class="py-4 px-6">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800 text-xs text-cyan-400 font-medium">
+                            <i data-lucide="${categoryIcons[item.category] || 'tag'}" class="w-3 h-3"></i>
+                            ${item.category}
+                        </span>
+                    </td>
+                    <td class="py-4 px-6 font-bold text-white">${item.model}</td>
+                    <td class="py-4 px-6 text-right font-mono font-bold text-cyan-400 text-base">${formatCurrency(item.finalPrice)}</td>
+                    <td class="py-4 px-6 text-center">
+                        <button onclick="event.stopPropagation(); openModal(${item.id})" class="px-3 py-1.5 bg-cyan-600/20 text-cyan-300 hover:bg-cyan-500 hover:text-white rounded-lg text-xs font-semibold border border-cyan-500/30 transition-all">
+                            Ver Ficha
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        window.openModal = function(id) {
+            const item = processedData.find(v => v.id === id);
+            if (!item) return;
+
+            document.getElementById('modal-id').textContent = item.id.toString().padStart(2, '0');
+            document.getElementById('modal-title').textContent = item.model;
+            document.getElementById('modal-category-text').textContent = item.category;
+            document.getElementById('modal-price').textContent = formatCurrency(item.finalPrice);
+            
+            const priceSourceEl = document.getElementById('modal-price-source');
+            priceSourceEl.textContent = item.priceSource;
+            priceSourceEl.className = `text-xs px-2.5 py-0.5 rounded border font-medium ${
+                item.sourceType === 'sale' 
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+            }`;
+
+            const imgEl = document.getElementById('modal-img');
+            imgEl.src = item.image;
+            imgEl.onerror = () => {
+                imgEl.src = `https://via.placeholder.com/600x450/0f172a/94a3b8?text=${encodeURIComponent(item.model)}`;
+            };
+
+            const waMsg = encodeURIComponent(`Hola, quisiera consultar información sobre la moto ${item.model}`);
+            document.getElementById('modal-whatsapp-btn').href = `https://wa.me/${whatsappNumber}?text=${waMsg}`;
+
+            const specs = [
+                { label: "Motor / Cilindrada", value: item.engine || "N/A", icon: "cpu" },
+                { label: "Potencia Máxima", value: item.power || "N/A", icon: "zap" },
+                { label: "Torque Máximo", value: item.torque || "N/A", icon: "gauge" },
+                { label: "Transmisión", value: item.transmission || "Manual", icon: "git-commit" },
+                { label: "Encendido / Alimentación", value: item.ignition ? `${item.ignition} • ${item.fuelSystem || ''}` : "CDI / Carburador", icon: "activity" },
+                { label: "Consumo / Ratios", value: item.consumption || "Económico", icon: "leaf" },
+                { label: "Sistema de Frenos", value: item.brake || "N/A", icon: "disc" },
+                { label: "Suspensión Del / Tras", value: item.frontSuspension ? `${item.frontSuspension} / ${item.rearSuspension}` : "Telescópica / Doble Amortiguador", icon: "sliders" },
+                { label: "Cauchos (Del / Tras)", value: item.frontTire ? `${item.frontTire} / ${item.rearTire}` : "Estándar", icon: "circle-dot" },
+                { label: "Capacidad Tanque", value: item.tank || "N/A", icon: "fuel" },
+                { label: "Dimensiones (LxAnxA)", value: item.dimensions || "Estándar", icon: "maximize-2" },
+                { label: "Peso Tara / Carga Cap.", value: item.weight || "N/A", icon: "weight" }
+            ];
+
+            const specsContainer = document.getElementById('modal-specs-container');
+            specsContainer.innerHTML = specs.map(s => `
+                <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1 hover:border-slate-700 transition-colors">
+                    <div class="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
+                        <i data-lucide="${s.icon}" class="w-3.5 h-3.5 text-cyan-400"></i>
+                        <span>${s.label}</span>
+                    </div>
+                    <div class="text-xs sm:text-sm font-semibold text-white tracking-wide truncate" title="${s.value}">${s.value}</div>
+                </div>
+            `).join('');
+
+            const eqSection = document.getElementById('modal-equipment-section');
+            const eqContainer = document.getElementById('modal-equipment-container');
+            if (item.equipment && item.equipment.length > 0) {
+                eqContainer.innerHTML = item.equipment.map(eq => `
+                    <span class="px-3 py-1 bg-slate-800/90 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-medium flex items-center gap-1.5">
+                        <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-amber-400"></i>
+                        ${eq}
+                    </span>
+                `).join('');
+                eqSection.classList.remove('hidden');
+            } else {
+                eqSection.classList.add('hidden');
+            }
+
+            document.getElementById('spec-modal').classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+            if (window.lucide) lucide.createIcons();
+        };
+
+        function closeModal() {
+            document.getElementById('spec-modal').classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+    </script>
+</body>
+</html>
